@@ -21,5 +21,10 @@ This project automates duplicate detection using image processing and numerical 
 - **OpenCV**
 - **Matplotlib**
 
+## Status: 🚧
+- **DONE**: Duplicate detection via vector similarity
+- **IN PROGRESS**: Improving performance for large datasets
+- **UPCOMING**: Feature to identify and cleanup blurry images
+
 ## Author
 Built as a personal project to apply image processing and vector similarity techniques to automatically detect and organize duplicate images in local storage.
