@@ -1,7 +1,8 @@
+import argparse
+
 from utils import to_grayscale, convolve, load_images, blur_score, find_duplicates
 
-def main():
-    folder = "D:\\testData-forTestingProjects"
+def main(folder):
     images = load_images(folder)
     print(f"\n Total images in memory: {len(images)}")
     duplicates = find_duplicates(images)
@@ -13,5 +14,6 @@ def main():
 
 
 if __name__ == "__main__":
-        main()
+    folder = input("Enter image folder path: ").strip()
+    main(folder)
 
