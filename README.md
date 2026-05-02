@@ -19,3 +19,6 @@ Tech-Stack
 - NumPy
 - OpenCV
 - Matplotlib
+
+Author
+Built as a personal project to apply image processing and vector similarity techniques to automatically detect and organize duplicate images in local storage.
