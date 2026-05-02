@@ -21,6 +21,12 @@ This project automates duplicate detection using image processing and numerical 
 - **OpenCV**
 - **Matplotlib**
 
+## Usage
+To run the cleaner, navigate to the project directory and execute:
+```bash
+python main.py
+```
+
 ## Status: 🚧
 - **DONE**: Duplicate detection via vector similarity
 - **IN PROGRESS**: Improving performance for large datasets
