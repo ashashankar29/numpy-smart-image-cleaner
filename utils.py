@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_image_files(folder):
@@ -63,20 +64,50 @@ def find_duplicates(images):
         vec = image_to_vector(proc)
         processed[name] = vec
 
-        #2. compare all pairs
-        names = list(processed.keys())
-        duplicates = []
+    #2. compare all pairs
+    names = list(processed.keys())
+    duplicates = []
 
-        for i in range(len(names)):
-            for j in range(i+1, len(names)):
-                n1, n2 = names[i], names[j]
-                dist = np.linalg.norm(processed[n1] - processed[n2])
-                if dist < 100:
-                    duplicates.append((n1, n2, dist))
-
-
+    for i in range(len(names)):
+        for j in range(i+1, len(names)):
+            n1, n2 = names[i], names[j]
+            dist = np.linalg.norm(processed[n1] - processed[n2])
+            if dist < 100:
+                duplicates.append((n1, n2, dist))
     return duplicates
 
 
 def image_to_vector(img):
+    #resizing image to gain speed.
+    img = cv2.resize(img, (64, 64))
+
+
     return img.flatten()
+
+def show_duplicate_pair(img1, img2, name_1, name_2, score):
+    plt.figure(figsize=(10, 15))
+
+    plt.subplot(1, 2, 1)
+    plt.imshow(img1, cmap="gray")
+    plt.title(name_1)
+    plt.axis("off")
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(img2, cmap="gray")
+    plt.title(name_2)
+    plt.axis("off")
+
+    plt.suptitle(f"Duplicate Pair | Distance: {score: .2f}")
+    plt.show()
+
+
+def format_time(seconds):
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 60 ) // 60)
+    secs = seconds % 60
+    if hours > 0:
+        return f"{hours} hr {minutes} min {secs} sec"
+    elif minutes > 0:
+        return f"{minutes} min {secs:.2f}"
+    else:
+        return f"{secs:.2f}  sec"
