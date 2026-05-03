@@ -26,6 +26,10 @@ To run the cleaner, navigate to the project directory and execute:
 ```bash
 python main.py
 ```
+## Results:
+Tested on 400 images
+Processing time: ~7–8 seconds
+Detected multiple duplicate image pairs
 
 ## Status: 🚧
 - **DONE**: Duplicate detection via vector similarity
