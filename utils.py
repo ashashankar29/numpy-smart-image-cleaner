@@ -71,7 +71,11 @@ def find_duplicates(images):
     for i in range(len(names)):
         for j in range(i+1, len(names)):
             n1, n2 = names[i], names[j]
-            dist = np.linalg.norm(processed[n1] - processed[n2])
+            v1 = processed[names[i]]
+            v2 = processed[names[j]]
+            if abs(np.mean(v1) - np.mean(v2)) > 5:
+                continue
+            dist = np.linalg.norm(v1 - v2)
             if dist < 100:
                 duplicates.append((n1, n2, dist))
     return duplicates
