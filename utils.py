@@ -1,14 +1,12 @@
 import os
+from collections import defaultdict
+
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def get_image_files(folder):
     valid_ext = {".jpg", ".jpeg", ".png"}
-    print("Current working directory:", os.getcwd())
-    print("files in image folder")
-
     files = os.listdir(folder)
 
     return [
@@ -16,102 +14,60 @@ def get_image_files(folder):
         if os.path.splitext(f)[1].lower() in valid_ext
     ]
 
+
 def load_images(folder):
-    images ={}
+    images = {}
     image_files = get_image_files(folder)
+
     print(f"Found {len(image_files)} image files\n")
 
     for f in image_files:
         path = os.path.join(folder, f)
         img = cv2.imread(path)
-        if img is not None:
-            images[f] = img
+
+        if img is None:
+            print(f"⚠️ Failed to load: {f}")
+            continue
+
+        images[f] = img
+
     return images
 
-def to_grayscale(img):
-    return np.dot(img[..., :3], [0.299, 0.587, 0.114])
 
-def blur_score(gray_image):
-    laplacian_kernel = np.array([
-        [0, -1, 0],
-        [-1, 4, -1],
-        [0, -1,  0]
-    ])
-    lap = convolve(gray_image, laplacian_kernel)
-    return lap.var()
+# 🔥 pHash
+def compute_phash(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(gray, (32, 32))
 
-def convolve(gray_image, lap_kernel):
-    h, w = gray_image.shape
-    kh, kw = lap_kernel.shape
-    pad_h = kh//2
-    pad_w = kw//2
+    dct = cv2.dct(np.float32(resized))
+    dct_low = dct[:8, :8]
 
-    padded = np.pad(gray_image,((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
-    output = np.zeros_like(gray_image)
-    for i in range (h):
-        for j in range (w):
-            region = padded[i:i+kh, j:j+kw]
-            output[i,j] = np.sum(region * lap_kernel)
+    median = np.median(dct_low)
+    hash_bits = (dct_low > median).flatten()
 
-    return output
+    return hash_bits
 
-def find_duplicates(images):
-    processed = {}
 
-    #1. preprocess so it's easy to compare two images
+def hamming_distance(h1, h2):
+    return np.count_nonzero(h1 != h2)
+
+def find_duplicates(images, threshold=10):
+    hash_map = defaultdict(list)
+
+    # 1. compute hashes
     for name, img in images.items():
-        proc = to_grayscale(img)
-        vec = image_to_vector(proc)
-        processed[name] = vec
+        h = compute_phash(img)
 
-    #2. compare all pairs
-    names = list(processed.keys())
+        key = ''.join(['1' if x else '0' for x in h])
+        hash_map[key].append(name)
+
     duplicates = []
 
-    for i in range(len(names)):
-        for j in range(i+1, len(names)):
-            n1, n2 = names[i], names[j]
-            v1 = processed[names[i]]
-            v2 = processed[names[j]]
-            if abs(np.mean(v1) - np.mean(v2)) > 5:
-                continue
-            dist = np.linalg.norm(v1 - v2)
-            if dist < 100:
-                duplicates.append((n1, n2, dist))
+    # 2. group duplicates
+    for group in hash_map.values():
+        if len(group) > 1:
+            for i in range(len(group)):
+                for j in range(i + 1, len(group)):
+                    duplicates.append((group[i], group[j], 0))
+
     return duplicates
-
-
-def image_to_vector(img):
-    #resizing image to gain speed.
-    img = cv2.resize(img, (64, 64))
-
-
-    return img.flatten()
-
-def show_duplicate_pair(img1, img2, name_1, name_2, score):
-    plt.figure(figsize=(10, 15))
-
-    plt.subplot(1, 2, 1)
-    plt.imshow(img1, cmap="gray")
-    plt.title(name_1)
-    plt.axis("off")
-
-    plt.subplot(1, 2, 2)
-    plt.imshow(img2, cmap="gray")
-    plt.title(name_2)
-    plt.axis("off")
-
-    plt.suptitle(f"Duplicate Pair | Distance: {score: .2f}")
-    plt.show()
-
-
-def format_time(seconds):
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 60 ) // 60)
-    secs = seconds % 60
-    if hours > 0:
-        return f"{hours} hr {minutes} min {secs} sec"
-    elif minutes > 0:
-        return f"{minutes} min {secs:.2f}"
-    else:
-        return f"{secs:.2f}  sec"
